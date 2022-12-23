@@ -13,6 +13,7 @@ var (
 	styleOmitLeft   lipgloss.Style
 	styleOmitRight  lipgloss.Style
 	styleSharp      lipgloss.Style
+	styleReverse    lipgloss.Style
 )
 
 func init() {
@@ -75,4 +76,6 @@ func init() {
 
 	styleOmitLeft = noTop(style.Copy().Border(omitBorderLeft))
 	styleOmitRight = noTop(style.Copy().Border(omitBorderRight))
+
+	styleReverse = lipgloss.NewStyle().Reverse(true)
 }
