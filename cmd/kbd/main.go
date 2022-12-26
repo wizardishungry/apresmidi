@@ -74,7 +74,6 @@ func sendRandomChords(p *tea.Program) {
 			}(150*time.Millisecond+5*time.Millisecond*time.Duration(i+1), 32)
 		}
 	}()
-	return
 	for {
 
 		var press, unpress [128]*bool
@@ -244,7 +243,11 @@ func (m model) View() string {
 		{"B", false},
 	}
 
-	var white, black []string
+	var white, black, octave []string
+
+	var octaves [128 / 7]struct {
+		numWhite int
+	}
 
 	for i := 0; i < numMidiNotes; i++ {
 		style := &style
@@ -308,6 +311,22 @@ func (m model) View() string {
 			}
 			white = append(white, style.Render(s))
 			// black = append(black, pad)
+
+			octIdx := i / len(notes)
+			octaves[octIdx].numWhite++
+
+			// octIdx := i / len(notes)
+			// oct := octIdx + initOctave
+			// _ = oct
+			// if octIdx >= len(octave) {
+			// 	const mult = 4 // FIXME this is a function of keywidth with border
+			// 	// octStr := lipgloss.PlaceHorizontal(mult*octaveSize-2, lipgloss.Center, fmt.Sprintf("%d", oct))
+			// 	octStr = "[" + octStr + "]"
+			// 	octave = append(octave, octStr)
+			// 	octaveSize = 0
+			// } else {
+			// 	octaveSize++
+			// }
 		}
 
 	}
@@ -315,7 +334,32 @@ func (m model) View() string {
 	strBlack := lipgloss.JoinHorizontal(lipgloss.Bottom, black...)
 	// strBlack = ""
 	strWhite := lipgloss.JoinHorizontal(lipgloss.Bottom, white...)
-	str := lipgloss.JoinVertical(lipgloss.Left, strBlack, strWhite)
+	strOctave := lipgloss.JoinHorizontal(lipgloss.Bottom, func() []string {
+		out := make([]string, 0, 2*len(octave))
+		for i, o := range octaves {
+			if o.numWhite > 0 {
+				const mult = 3 // FIXME this is a function of keywidth with border
+				oct := i + initOctave
+				size := mult*o.numWhite - 1
+				if i == 0 {
+					out = append(out, "[")
+				} else {
+					out = append(out, "|")
+				}
+				var last bool
+				if i == len(octaves)-1 {
+					last = true
+					size--
+				}
+				out = append(out, lipgloss.PlaceHorizontal(size, lipgloss.Center, fmt.Sprintf("%d", oct)))
+				if last {
+					out = append(out, "]")
+				}
+			}
+		}
+		return out
+	}()...)
+	str := lipgloss.JoinVertical(lipgloss.Left, strBlack, strWhite, strOctave)
 	s += str + "\n"
 
 	// Send the UI for rendering
